@@ -59,7 +59,7 @@ public class AuthService {
         }
 
         if (!checkInput.isEmailValid(email)) {
-            throw new IllegalArgumentException("Invalid input data");
+            throw new IllegalArgumentException("Siema");
         }
 
         if (!checkInput.isPasswordStrong(password)) {

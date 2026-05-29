@@ -36,8 +36,10 @@ services:
     build: ./auth
     container_name: auth
     depends_on:
-      - auth-postgres
-      - redis
+      auth-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     env_file:
       - .env
     environment:
@@ -62,9 +64,12 @@ services:
     build: ./sourceofvoice
     container_name: sourceofvoice
     depends_on:
-      - sourceofvoice-postgres
-      - minio
-      - payment
+      sourceofvoice-postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      payment:
+        condition: service_started
     env_file:
       - .env
     environment:
@@ -98,7 +103,8 @@ services:
     build: ./payment
     container_name: payment
     depends_on:
-      - payment-postgres
+      payment-postgres:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -119,55 +125,70 @@ services:
       - payment-postgres-n
 
   payment-postgres:
-    image: postgres
+    image: postgres:17-alpine
     container_name: payment-postgres-sourceofvoice
     ports:
       - "5435:5432"
     environment:
-      POSTGRES_DB: ${POSTGRES_PAYMENT_DB}
-      POSTGRES_USER: ${POSTGRES_PAYMENT_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PAYMENT_PASSWORD}
+      POSTGRES_DB: "${POSTGRES_PAYMENT_DB}"
+      POSTGRES_USER: "${POSTGRES_PAYMENT_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PAYMENT_PASSWORD}"
     networks:
       - payment-postgres-n
     volumes:
       - payment_service_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   auth-postgres:
-    image: postgres
-    container_name: "auth-postgres-sourceofvoice"
+    image: postgres:17-alpine
+    container_name: auth-postgres-sourceofvoice
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_DB: ${POSTGRES_AUTH_DB}
-      POSTGRES_USER: ${POSTGRES_AUTH_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_AUTH_PASSWORD}
+      POSTGRES_DB: "${POSTGRES_AUTH_DB}"
+      POSTGRES_USER: "${POSTGRES_AUTH_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_AUTH_PASSWORD}"
     networks:
       - auth-postgres-n
     volumes:
       - auth_service_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   sourceofvoice-postgres:
-    image: postgres
-    container_name: "sourceofvoice-postgres-sourceofvoice"
+    image: postgres:17-alpine
+    container_name: sourceofvoice-postgres-sourceofvoice
     ports:
       - "5434:5432"
     environment:
-      POSTGRES_DB: ${POSTGRES_SOURCEOFVOICE_DB}
-      POSTGRES_USER: ${POSTGRES_SOURCEOFVOICE_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_SOURCEOFVOICE_PASSWORD}
+      POSTGRES_DB: "${POSTGRES_SOURCEOFVOICE_DB}"
+      POSTGRES_USER: "${POSTGRES_SOURCEOFVOICE_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_SOURCEOFVOICE_PASSWORD}"
     networks:
       - sourceofvoice-postgres-n
     volumes:
       - sourceofvoice_service_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 
   redis:
     image: redis:latest
     container_name: refresh_token_redis
     ports:
-       - "6379:6379"
+      - "6379:6379"
     networks:
-       - sourceofvoice
+      - sourceofvoice
     volumes:
       - redis-data:/data
     command: [ "redis-server", "--save", "60", "1", "--loglevel", "warning" ]
@@ -181,7 +202,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    command: ["server", "/data", "--console-address", ":9001"]
+    command: [ "server", "/data", "--console-address", ":9001" ]
     networks:
       - sourceofvoice
     volumes:
@@ -197,6 +218,8 @@ volumes:
 
 networks:
   sourceofvoice:
+    external: true
+    name: source-of-voice_sourceofvoice
     driver: bridge
   auth-postgres-n:
     driver: bridge

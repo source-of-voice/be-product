@@ -19,6 +19,5 @@ public class InternalAuthController {
     @GetMapping("/token-version/{userId}")
     public long getTokenVersion(@PathVariable Long userId) {
         return authService.getCurrentTokenVersion(userId);
-
     }
 }
