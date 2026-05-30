@@ -108,6 +108,18 @@ public class AdminGenerateTextService {
                     return Flux.fromIterable(response.getQuery().getPages().values());
                 })
                 .concatMap(page -> trySavePageAsText(page, request, batch))
+                .takeUntil(new java.util.function.Predicate<Boolean>() {
+                    private int savedCount = 0;
+
+                    @Override
+                    public boolean test(Boolean saved) {
+                        if (Boolean.TRUE.equals(saved)) {
+                            savedCount++;
+                        }
+
+                        return savedCount >= request.getRequestedCount();
+                    }
+                })
                 .collectList()
                 .map(this::calculateGenerationResult);
     }

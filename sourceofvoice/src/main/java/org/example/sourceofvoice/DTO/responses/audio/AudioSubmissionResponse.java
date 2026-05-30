@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 
 @Data
 public class AudioSubmissionResponse {
-
     private Long id;
     private Long audioTextId;
     private AudioSubmissionStatus status;
