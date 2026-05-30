@@ -2,7 +2,11 @@ package org.example.auth.controllers;
 
 import org.example.auth.DTO.request.AssignRoleRequest;
 import org.example.auth.DTO.request.RevokeRoleRequest;
+import org.example.auth.DTO.response.ListUserResponse;
 import org.example.auth.services.AdminAuthService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,5 +27,12 @@ public class AdminAuthController {
     @PostMapping("/revoke/role")
     public String revokeRole(@RequestBody RevokeRoleRequest request){
         return adminAuthService.revokeRole(request);
+    }
+
+    @GetMapping("/users")
+    public Page<ListUserResponse> getUsersWithRoles(
+            @PageableDefault(size = 10, sort = "email") Pageable pageable
+    ) {
+        return adminAuthService.getUsersWithRoles(pageable);
     }
 }
