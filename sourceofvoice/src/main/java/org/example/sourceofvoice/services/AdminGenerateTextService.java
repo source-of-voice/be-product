@@ -64,10 +64,14 @@ public class AdminGenerateTextService {
                         })
                         .onErrorResume(error -> {
                             savedBatch.setStatus(AudioTextBatchStatus.FAILED);
-                            savedBatch.setErrorMessage(error.getMessage());
+                            savedBatch.setErrorMessage("External text provider is temporarily unavailable");
                             savedBatch.setFinishedAt(LocalDateTime.now());
 
-                            return audioTextBatchRepository.save(savedBatch);
+                            return audioTextBatchRepository.save(savedBatch)
+                                    .then(Mono.error(new ResponseStatusException(
+                                            HttpStatus.SERVICE_UNAVAILABLE,
+                                            "External text provider is temporarily unavailable"
+                                    )));
                         })
 
                 ).map(this::toResponse);

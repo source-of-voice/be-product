@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,8 +29,8 @@ public class WikipediaClient {
                         .queryParam("rnlimit", limit)
                         .build())
                 .retrieve()
-                .bodyToMono(WikipediaRandomResponse.class);
-
+                .bodyToMono(WikipediaRandomResponse.class)
+                .timeout(Duration.ofSeconds(5));
     }
 
     public Mono<WikipediaExtractResponse> getExtracts(String languageCode, List<Long> pageIds, boolean introOnly) {
@@ -53,7 +54,8 @@ public class WikipediaClient {
                     return builder.build();
                 })
                 .retrieve()
-                .bodyToMono(WikipediaExtractResponse.class);
+                .bodyToMono(WikipediaExtractResponse.class)
+                .timeout(Duration.ofSeconds(5));
     }
 
     private WebClient buildClient(String languageCode) {

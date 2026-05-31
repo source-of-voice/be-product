@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+
 @Service
 public class SpeechmanticsClient {
 
@@ -52,14 +54,16 @@ public class SpeechmanticsClient {
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .bodyValue(bodyBuilder.build())
                 .retrieve()
-                .bodyToMono(CreateJobResponse.class);
+                .bodyToMono(CreateJobResponse.class)
+                .timeout(Duration.ofSeconds(15));
     }
 
     public Mono<JobDetailsResponse> getJobDetails(String jobId){
         return webClient.get()
                 .uri("/jobs/{jobId}", jobId)
                 .retrieve()
-                .bodyToMono(JobDetailsResponse.class);
+                .bodyToMono(JobDetailsResponse.class)
+                .timeout(Duration.ofSeconds(15));
     }
 
     public Mono<String> getTranscriptText(String jobId){
@@ -69,7 +73,8 @@ public class SpeechmanticsClient {
                         .queryParam("format", "txt")
                         .build(jobId))
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToMono(String.class)
+                .timeout(Duration.ofSeconds(15));
     }
 
     @Data
